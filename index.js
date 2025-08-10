@@ -32,23 +32,27 @@ async function run() {
     const reviewCollection = client.db("bistroDB").collection("reviews");
     const cartsCollection = client.db("bistroDB").collection("carts");
 
-
     //Users related apis___________________________________________///
-    app.post('/users', async (req, res) => {
+
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
       const user = req.body;
-      // inser email if user dosent exists: 
-      // you you can do this many way, (1. email unique, 2. upsert, 3. simple chechking) 
+      // inser email if user dosent exists:
+      // you you can do this many way, (1. email unique, 2. upsert, 3. simple chechking)
 
-      const query = {email: user.email};
-      const existingUser = await userCollection.findOne(query)
-      if(existingUser){
-        return res.send({message: 'user already exist', insertedId: null})
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exist", insertedId: null });
       }
-
       
-      const result = await userCollection.insertOne(user)
-      res.send(result)
-    })
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     // menu related apis
     app.get("/menu", async (req, res) => {
@@ -61,10 +65,14 @@ async function run() {
       res.send(result);
     });
 
-    // CARTS Collections:          \\________________________ Cart ______________________//
+
+
+    
+    // CARTS Collections:        \\________________________ Cart ______________________//
+
     app.get("/carts", async (req, res) => {
       const email = req.query.email;
-      const query = {email: email}
+      const query = { email: email };
       const result = await cartsCollection.find(query).toArray();
       res.send(result);
     });
@@ -74,12 +82,12 @@ async function run() {
       res.send(result);
     });
 
-    app.delete('/carts/:id', async (req, res) => {
+    app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await cartsCollection.deleteOne(query)
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const result = await cartsCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

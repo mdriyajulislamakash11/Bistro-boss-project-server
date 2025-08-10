@@ -66,6 +66,22 @@ async function run() {
       res.send(result);
     });
 
+    // kono ekta user admin kina ta check korar jonno: __________//
+    app.get("/user/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "unAuthorized access" });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       // inser email if user dosent exists:

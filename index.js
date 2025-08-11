@@ -12,6 +12,7 @@ app.use(express.json());
 // mongo DB
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const res = require("express/lib/response");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zchez.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -136,13 +137,16 @@ async function run() {
     });
 
     // menu related apis ____________________ Menu ________________________//
+
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
 
-    app.get("/reviews", async (req, res) => {
-      const result = await reviewCollection.find().toArray();
+    app.get("/menu/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.findOne(query);
       res.send(result);
     });
 
@@ -152,12 +156,37 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/menu/:id", verifyToken, verifyAdmin, async (req, res) => {
+    app.patch("/menu/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await menuCollection.deleteOne(query)
-      res.send(result)
-    })
+      const filter = { _id: new ObjectId(id) };
+      const item = req.body;
+
+      const updatedDoc = {
+        $set: {
+          name: item.name,
+          category: item.category,
+          recipe: item.recipe,
+          price: item.price,
+          image: item.imag,
+        },
+      };
+      const result = await menuCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    app.delete("/menu/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // Rivew related APIs: __________________________ Rivew ____________________//
+
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
 
     // CARTS Collections:        \\________________________ Cart ______________________//
 

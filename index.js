@@ -300,7 +300,7 @@ async function run() {
      * 3. for every item in the menu collection that you found from a payment entry (document)
      */
 
-    // using aggregate pipline:
+    // using aggregate pipline: best way
     app.get("/order-stats", verifyToken, verifyAdmin, async (req, res) => {
       const result = await paymentsCollection.aggregate([
           {

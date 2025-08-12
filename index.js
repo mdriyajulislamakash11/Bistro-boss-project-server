@@ -279,15 +279,64 @@ async function run() {
           },
         ])
         .toArray();
-        const revenue = result.length > 0 ? result[0].totalRevenue : 0;
+      const revenue = result.length > 0 ? result[0].totalRevenue : 0;
 
       res.send({
         users,
         menuItems,
         orders,
         // newRevenue
-        revenue
+        revenue,
       });
+    });
+
+    // order status: chart
+    /**
+     * -------------------------------
+     *      NON-Efficient Way
+     * -------------------------------
+     * 1. load all the payments
+     * 2. for every menuItemIds (which is an array), go find the item from menuCollection
+     * 3. for every item in the menu collection that you found from a payment entry (document)
+     */
+
+    // using aggregate pipline:
+    app.get("/order-stats", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await paymentsCollection.aggregate([
+          {
+            $unwind: "$menuItemId",
+          },
+          {
+            $lookup: {
+              from: "menu",
+              localField: "menuItemId",
+              foreignField: "_id",
+              as: "menuItems",
+            },
+          },
+          {
+            $unwind: "$menuItems",
+          },
+          {
+            $group: {
+              _id: "$menuItems.category",
+              quantity: { $sum: 1 },
+              revenue: { $sum: '$menuItems.price'}
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              category: '$_id',
+              quantity: '$quantity',
+              revenue: '$revenue'
+
+            }
+          }
+        ])
+        .toArray();
+
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
